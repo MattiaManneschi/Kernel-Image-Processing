@@ -1,0 +1,77 @@
+# ============================================================================
+# Kernel Image Processing - .gitignore
+# ============================================================================
+
+# Build artifacts
+bin/
+obj/
+*.o
+*.exe
+*.out
+
+# CUDA compiled files
+*.cubin
+*.ptx
+*.fatbin
+
+# IDE and editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.cproject
+.settings/
+
+# Results (keep structure, ignore large generated files)
+results/benchmarks/*.csv
+results/plots/*.png
+!results/benchmarks/.gitkeep
+!results/plots/.gitkeep
+
+# Images (keep structure, ignore actual images - too large)
+images/input/*.png
+images/input/*.jpg
+images/input/*.jpeg
+images/input/*.bmp
+images/output/*
+!images/input/.gitkeep
+!images/output/.gitkeep
+
+# OS generated
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Temporary files
+*.log
+*.tmp
+*.temp
+*.bak
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+venv/
+ENV/
+.env
+
+# Documentation builds
+docs/*.aux
+docs/*.log
+docs/*.out
+docs/*.toc
+docs/*.synctex.gz
+
+# Profiling data
+*.nvprof
+*.qdrep
+*.nsys-rep

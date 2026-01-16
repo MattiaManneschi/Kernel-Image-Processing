@@ -1,0 +1,22 @@
+============================================================
+BENCHMARK SUMMARY
+============================================================
+
+Best Speedup: 447.23x
+  Implementation: cuda_global
+  Image Size: 4096x4096
+  Kernel: Sobel X 3x3
+  Time: 1.793 ms
+
+Average Speedup by Implementation:
+  cpu: 1.00x
+  cuda_global: 343.94x
+  cuda_constant: 344.75x
+  cuda_shared: 345.07x
+
+Average Speedup by Image Size (CUDA Shared):
+  256x256: 271.60x
+  512x512: 360.79x
+  1024x1024: 352.62x
+  2048x2048: 369.76x
+  4096x4096: 370.58x
