@@ -30,6 +30,7 @@ CPP_SRCS := $(SRC_DIR)/main.cpp \
             $(SRC_DIR)/kernels.cpp \
             $(SRC_DIR)/cpu_convolution.cpp \
             $(SRC_DIR)/benchmark.cpp \
+            $(SRC_DIR)/advanced_tests.cpp \
             $(SRC_DIR)/utils.cpp
 
 CU_SRCS := $(SRC_DIR)/gpu_convolution.cu
@@ -64,7 +65,7 @@ all: directories $(TARGET)
 directories:
 	@mkdir -p $(BIN_DIR) $(OBJ_DIR)
 	@mkdir -p images/input images/output
-	@mkdir -p results/benchmarks results/plots
+	@mkdir -p results/benchmarks results/plots results/advanced_tests
 
 # Link final executable
 $(TARGET): $(ALL_OBJS)
@@ -141,10 +142,11 @@ help:
 # Dependencies (auto-generated would be better, but this works)
 $(OBJ_DIR)/main.o: $(SRC_DIR)/main.cpp $(SRC_DIR)/image_io.h $(SRC_DIR)/kernels.h \
                    $(SRC_DIR)/cpu_convolution.h $(SRC_DIR)/gpu_convolution.cuh \
-                   $(SRC_DIR)/benchmark.h $(SRC_DIR)/utils.h
+                   $(SRC_DIR)/benchmark.h $(SRC_DIR)/advanced_tests.h $(SRC_DIR)/utils.h
 $(OBJ_DIR)/image_io.o: $(SRC_DIR)/image_io.cpp $(SRC_DIR)/image_io.h
 $(OBJ_DIR)/kernels.o: $(SRC_DIR)/kernels.cpp $(SRC_DIR)/kernels.h
 $(OBJ_DIR)/cpu_convolution.o: $(SRC_DIR)/cpu_convolution.cpp $(SRC_DIR)/cpu_convolution.h
 $(OBJ_DIR)/benchmark.o: $(SRC_DIR)/benchmark.cpp $(SRC_DIR)/benchmark.h
+$(OBJ_DIR)/advanced_tests.o: $(SRC_DIR)/advanced_tests.cpp $(SRC_DIR)/advanced_tests.h
 $(OBJ_DIR)/utils.o: $(SRC_DIR)/utils.cpp $(SRC_DIR)/utils.h
 $(OBJ_DIR)/gpu_convolution.cu.o: $(SRC_DIR)/gpu_convolution.cu $(SRC_DIR)/gpu_convolution.cuh
