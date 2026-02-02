@@ -12,15 +12,15 @@
 #include <chrono>
 #include <random>
 
-// ============================================================================
-// Helper Functions - Image Loading
-// ============================================================================
 
-// Find images in a directory
+
+
+
+
 static std::vector<std::string> find_images_in_dir(const std::string& dir) {
     std::vector<std::string> paths;
 
-    // Try common Kodak naming
+    
     for (int i = 1; i <= 24; i++) {
         char filename[256];
         snprintf(filename, sizeof(filename), "%s/kodim%02d.png", dir.c_str(), i);
@@ -33,14 +33,14 @@ static std::vector<std::string> find_images_in_dir(const std::string& dir) {
     return paths;
 }
 
-// Load a random image from directory, or return empty if not found
+
 static Image load_random_image(const std::string& dir) {
     auto paths = find_images_in_dir(dir);
     if (paths.empty()) {
-        return Image();  // Return invalid image
+        return Image();  
     }
 
-    // Pick random
+    
     auto seed = std::chrono::high_resolution_clock::now().time_since_epoch().count();
     std::mt19937 gen(seed);
     std::uniform_int_distribution<> dis(0, paths.size() - 1);
@@ -50,7 +50,7 @@ static Image load_random_image(const std::string& dir) {
     return load_image(paths[idx]);
 }
 
-// Resize image to target dimensions
+
 static Image resize_image(const Image& src, int target_width, int target_height) {
     if (src.width == target_width && src.height == target_height) {
         return src;
@@ -76,56 +76,58 @@ static Image resize_image(const Image& src, int target_width, int target_height)
     return resized;
 }
 
-// Global base image for tests (loaded once)
+
 static Image g_base_image;
 static bool g_using_real_images = false;
 
-// Forward declarations
+
 static Image create_gradient_image(int width, int height, int channels);
 static Image convert_channels(const Image& src, int target_channels);
 
-// Initialize base image from directory or synthetic
+
 static void init_base_image(const std::string& images_dir) {
+    std::cout << std::flush;  
     if (!images_dir.empty()) {
-        std::cout << "Searching for images in: " << images_dir << std::endl;
+        std::cout << "Searching for images in: " << images_dir << std::endl << std::flush;
         try {
             g_base_image = load_random_image(images_dir);
             if (g_base_image.is_valid()) {
                 g_using_real_images = true;
                 std::cout << ">>> Using REAL image: " << g_base_image.width << "x"
-                          << g_base_image.height << ", " << g_base_image.channels << " channels" << std::endl;
+                          << g_base_image.height << ", " << g_base_image.channels
+                          << " channels" << std::endl << std::flush;
                 return;
             }
         } catch (const std::exception& e) {
-            std::cout << "Failed to load: " << e.what() << std::endl;
+            std::cout << "Failed to load: " << e.what() << std::endl << std::flush;
         }
-        std::cout << "No images found, falling back to synthetic" << std::endl;
+        std::cout << "No images found, falling back to synthetic" << std::endl << std::flush;
     }
     g_using_real_images = false;
-    std::cout << ">>> Using SYNTHETIC images" << std::endl;
+    std::cout << ">>> Using SYNTHETIC images" << std::endl << std::flush;
 }
 
-// Get image at target size (from real or synthetic)
+
 static Image get_test_image(int width, int height, int channels = 3) {
     if (g_using_real_images && g_base_image.is_valid()) {
         Image resized = resize_image(g_base_image, width, height);
-        // Convert channels if needed
+        
         if (resized.channels != channels) {
             return convert_channels(resized, channels);
         }
         return resized;
     }
-    // Fallback to synthetic
+    
     return create_gradient_image(width, height, channels);
 }
 
-// ============================================================================
-// Helper Functions - Image Generation
-// ============================================================================
 
-// Create test images of different types
+
+
+
+
 static Image create_natural_like_image(int width, int height, int channels) {
-    // Simulate natural image with varied content
+    
     Image img(width, height, channels);
     std::mt19937 gen(42);
     std::normal_distribution<float> dist(128.0f, 40.0f);
@@ -133,7 +135,7 @@ static Image create_natural_like_image(int width, int height, int channels) {
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
             for (int c = 0; c < channels; c++) {
-                // Add some spatial correlation (smoother than pure noise)
+                
                 float base = dist(gen);
                 float spatial = 20.0f * std::sin(x * 0.05f) * std::cos(y * 0.03f);
                 int val = static_cast<int>(base + spatial);
@@ -198,7 +200,7 @@ static Image create_gradient_image(int width, int height, int channels) {
     return img;
 }
 
-// Convert image to different channel count
+
 static Image convert_channels(const Image& src, int target_channels) {
     if (src.channels == target_channels) return src;
 
@@ -207,7 +209,7 @@ static Image convert_channels(const Image& src, int target_channels) {
     for (int y = 0; y < src.height; y++) {
         for (int x = 0; x < src.width; x++) {
             if (target_channels == 1) {
-                // Convert to grayscale
+                
                 int gray = 0;
                 for (int c = 0; c < src.channels && c < 3; c++) {
                     gray += src.at(x, y, c);
@@ -215,31 +217,31 @@ static Image convert_channels(const Image& src, int target_channels) {
                 dst.at(x, y, 0) = static_cast<uint8_t>(gray / std::min(src.channels, 3));
             } else if (target_channels == 3) {
                 if (src.channels == 1) {
-                    // Grayscale to RGB
+                    
                     for (int c = 0; c < 3; c++) {
                         dst.at(x, y, c) = src.at(x, y, 0);
                     }
                 } else {
-                    // Copy first 3 channels
+                    
                     for (int c = 0; c < 3; c++) {
                         dst.at(x, y, c) = src.at(x, y, c % src.channels);
                     }
                 }
             } else if (target_channels == 4) {
-                // Add alpha channel
+                
                 for (int c = 0; c < 3; c++) {
                     dst.at(x, y, c) = src.at(x, y, c % src.channels);
                 }
-                dst.at(x, y, 3) = 255;  // Full opacity
+                dst.at(x, y, 3) = 255;  
             }
         }
     }
     return dst;
 }
 
-// ============================================================================
-// Test 1: Image Types Comparison
-// ============================================================================
+
+
+
 
 std::vector<TestResult> test_image_types(const AdvancedTestConfig& config) {
     std::vector<TestResult> results;
@@ -251,8 +253,9 @@ std::vector<TestResult> test_image_types(const AdvancedTestConfig& config) {
     const int width = 1024, height = 1024, channels = 3;
     ConvKernel kernel = get_kernel("gaussian", 5);
 
-    // Create different image types
+    
     std::vector<std::pair<std::string, Image>> test_images = {
+        {"Kodak (real)", get_test_image(width, height, channels)},
         {"Natural-like", create_natural_like_image(width, height, channels)},
         {"Random noise", create_noise_image(width, height, channels)},
         {"Uniform gray", create_uniform_image(width, height, channels)},
@@ -268,7 +271,7 @@ std::vector<TestResult> test_image_types(const AdvancedTestConfig& config) {
     std::cout << std::string(65, '-') << std::endl;
 
     for (const auto& [name, image] : test_images) {
-        // CPU timing
+        
         std::vector<double> cpu_times;
         for (int i = 0; i < config.iterations; i++) {
             double t;
@@ -277,7 +280,7 @@ std::vector<TestResult> test_image_types(const AdvancedTestConfig& config) {
         }
         double cpu_avg = compute_mean(cpu_times);
 
-        // CUDA timing
+        
         std::vector<double> cuda_times;
         for (int i = 0; i < config.iterations; i++) {
             double t;
@@ -305,9 +308,9 @@ std::vector<TestResult> test_image_types(const AdvancedTestConfig& config) {
     return results;
 }
 
-// ============================================================================
-// Test 2: Channel Count Comparison
-// ============================================================================
+
+
+
 
 std::vector<TestResult> test_channel_counts(const AdvancedTestConfig& config) {
     std::vector<TestResult> results;
@@ -319,8 +322,8 @@ std::vector<TestResult> test_channel_counts(const AdvancedTestConfig& config) {
     const int width = 1024, height = 1024;
     ConvKernel kernel = get_kernel("gaussian", 5);
 
-    // Base image (RGB)
-    Image base_image = create_gradient_image(width, height, 3);
+    
+    Image base_image = get_test_image(width, height, 3);
 
     std::vector<std::pair<std::string, int>> channel_configs = {
         {"Grayscale (1ch)", 1},
@@ -339,7 +342,7 @@ std::vector<TestResult> test_channel_counts(const AdvancedTestConfig& config) {
     for (const auto& [name, ch] : channel_configs) {
         Image image = convert_channels(base_image, ch);
 
-        // CPU timing
+        
         std::vector<double> cpu_times;
         for (int i = 0; i < config.iterations; i++) {
             double t;
@@ -348,7 +351,7 @@ std::vector<TestResult> test_channel_counts(const AdvancedTestConfig& config) {
         }
         double cpu_avg = compute_mean(cpu_times);
 
-        // CUDA timing
+        
         std::vector<double> cuda_times;
         for (int i = 0; i < config.iterations; i++) {
             double t;
@@ -378,9 +381,9 @@ std::vector<TestResult> test_channel_counts(const AdvancedTestConfig& config) {
     return results;
 }
 
-// ============================================================================
-// Test 3: Resolution Comparison (Non-square, Video formats)
-// ============================================================================
+
+
+
 
 std::vector<TestResult> test_resolutions(const AdvancedTestConfig& config) {
     std::vector<TestResult> results;
@@ -414,7 +417,7 @@ std::vector<TestResult> test_resolutions(const AdvancedTestConfig& config) {
         Image image = get_test_image(w, h, 3);
         double megapixels = (w * h) / 1e6;
 
-        // CPU timing
+        
         std::vector<double> cpu_times;
         for (int i = 0; i < config.iterations; i++) {
             double t;
@@ -423,7 +426,7 @@ std::vector<TestResult> test_resolutions(const AdvancedTestConfig& config) {
         }
         double cpu_avg = compute_mean(cpu_times);
 
-        // CUDA timing
+        
         std::vector<double> cuda_times;
         for (int i = 0; i < config.iterations; i++) {
             double t;
@@ -453,9 +456,9 @@ std::vector<TestResult> test_resolutions(const AdvancedTestConfig& config) {
     return results;
 }
 
-// ============================================================================
-// Test 4: Block Size Sweep (Occupancy Analysis)
-// ============================================================================
+
+
+
 
 std::vector<TestResult> test_block_sizes(const AdvancedTestConfig& config) {
     std::vector<TestResult> results;
@@ -482,7 +485,7 @@ std::vector<TestResult> test_block_sizes(const AdvancedTestConfig& config) {
     int best_block = 0;
 
     for (int bs : block_sizes) {
-        // CUDA timing
+        
         std::vector<double> times;
         for (int i = 0; i < config.iterations; i++) {
             double t;
@@ -521,9 +524,9 @@ std::vector<TestResult> test_block_sizes(const AdvancedTestConfig& config) {
     return results;
 }
 
-// ============================================================================
-// Test 5: 2D vs Separable Convolution
-// ============================================================================
+
+
+
 
 std::vector<TestResult> test_separable_convolution(const AdvancedTestConfig& config) {
     std::vector<TestResult> results;
@@ -549,7 +552,7 @@ std::vector<TestResult> test_separable_convolution(const AdvancedTestConfig& con
     for (int ks : kernel_sizes) {
         ConvKernel kernel = get_kernel("gaussian", ks);
 
-        // Check if separable
+        
         std::vector<float> h_kernel, v_kernel;
         bool separable = is_separable(kernel, h_kernel, v_kernel);
 
@@ -559,7 +562,7 @@ std::vector<TestResult> test_separable_convolution(const AdvancedTestConfig& con
             continue;
         }
 
-        // 2D convolution timing
+        
         std::vector<double> times_2d;
         for (int i = 0; i < config.iterations; i++) {
             double t;
@@ -568,7 +571,7 @@ std::vector<TestResult> test_separable_convolution(const AdvancedTestConfig& con
         }
         double avg_2d = compute_mean(times_2d);
 
-        // Separable convolution timing
+        
         std::vector<double> times_sep;
         for (int i = 0; i < config.iterations; i++) {
             auto start = std::chrono::high_resolution_clock::now();
@@ -600,9 +603,9 @@ std::vector<TestResult> test_separable_convolution(const AdvancedTestConfig& con
     return results;
 }
 
-// ============================================================================
-// Test 6: Memory Bandwidth Analysis
-// ============================================================================
+
+
+
 
 std::vector<TestResult> test_memory_bandwidth(const AdvancedTestConfig& config) {
     std::vector<TestResult> results;
@@ -611,14 +614,14 @@ std::vector<TestResult> test_memory_bandwidth(const AdvancedTestConfig& config) 
     std::cout << "TEST 6: Memory Bandwidth Analysis" << std::endl;
     std::cout << std::string(60, '=') << std::endl;
 
-    // GTX 1080 theoretical peak: 320 GB/s
-    const double theoretical_bandwidth = 320.0;  // GB/s
+    
+    const double theoretical_bandwidth = 320.0;  
 
     std::vector<std::tuple<int, int>> sizes = {
         {512, 512}, {1024, 1024}, {2048, 2048}, {4096, 4096}
     };
 
-    ConvKernel kernel = get_kernel("gaussian", 3);  // Small kernel to be memory-bound
+    ConvKernel kernel = get_kernel("gaussian", 3);  
 
     std::cout << "\nTheoretical peak bandwidth (GTX 1080): " << theoretical_bandwidth << " GB/s\n";
     std::cout << "Kernel: " << kernel.name << " (small kernel = memory-bound)\n\n";
@@ -632,14 +635,14 @@ std::vector<TestResult> test_memory_bandwidth(const AdvancedTestConfig& config) 
     for (const auto& [w, h] : sizes) {
         Image image = get_test_image(w, h, 3);
 
-        // Calculate data transferred:
-        // Read: input image + kernel (kernel negligible)
-        // Write: output image
-        // Total: 2 * image_size (read + write)
-        double data_mb = 2.0 * w * h * 3 / (1024.0 * 1024.0);  // MB
+        
+        
+        
+        
+        double data_mb = 2.0 * w * h * 3 / (1024.0 * 1024.0);  
         double data_gb = data_mb / 1024.0;
 
-        // CUDA timing
+        
         std::vector<double> times;
         for (int i = 0; i < config.iterations; i++) {
             double t;
@@ -648,8 +651,8 @@ std::vector<TestResult> test_memory_bandwidth(const AdvancedTestConfig& config) 
         }
         double avg_time = compute_mean(times);
 
-        // Calculate effective bandwidth
-        double bandwidth = data_gb / (avg_time / 1000.0);  // GB/s
+        
+        double bandwidth = data_gb / (avg_time / 1000.0);  
         double efficiency = 100.0 * bandwidth / theoretical_bandwidth;
 
         std::cout << std::setw(12) << w << "x" << h
@@ -662,7 +665,7 @@ std::vector<TestResult> test_memory_bandwidth(const AdvancedTestConfig& config) 
         r.test_name = "Bandwidth";
         r.configuration = std::to_string(w) + "x" + std::to_string(h);
         r.time_ms = avg_time;
-        r.speedup = efficiency;  // Using speedup field for efficiency
+        r.speedup = efficiency;  
         r.throughput = bandwidth;
         results.push_back(r);
     }
@@ -673,9 +676,9 @@ std::vector<TestResult> test_memory_bandwidth(const AdvancedTestConfig& config) 
     return results;
 }
 
-// ============================================================================
-// Test 7: CUDA Streams (Multi-image processing)
-// ============================================================================
+
+
+
 
 std::vector<TestResult> test_cuda_streams(const AdvancedTestConfig& config) {
     std::vector<TestResult> results;
@@ -700,13 +703,13 @@ std::vector<TestResult> test_cuda_streams(const AdvancedTestConfig& config) {
     double single_image_time = 0;
 
     for (int batch : batch_sizes) {
-        // Create batch of images
+        
         std::vector<Image> images;
         for (int i = 0; i < batch; i++) {
             images.push_back(get_test_image(width, height, 3));
         }
 
-        // Time processing all images
+        
         std::vector<double> times;
         for (int iter = 0; iter < config.iterations; iter++) {
             auto start = std::chrono::high_resolution_clock::now();
@@ -722,7 +725,7 @@ std::vector<TestResult> test_cuda_streams(const AdvancedTestConfig& config) {
 
         double total_time = compute_mean(times);
         double time_per_image = total_time / batch;
-        double throughput = batch / (total_time / 1000.0);  // images/second
+        double throughput = batch / (total_time / 1000.0);  
 
         if (batch == 1) {
             single_image_time = time_per_image;
@@ -748,9 +751,9 @@ std::vector<TestResult> test_cuda_streams(const AdvancedTestConfig& config) {
     return results;
 }
 
-// ============================================================================
-// Run All Tests
-// ============================================================================
+
+
+
 
 std::vector<TestResult> run_all_advanced_tests(const AdvancedTestConfig& config) {
     std::vector<TestResult> all_results;
@@ -759,7 +762,7 @@ std::vector<TestResult> run_all_advanced_tests(const AdvancedTestConfig& config)
     std::cout << "           ADVANCED PERFORMANCE TESTS" << std::endl;
     std::cout << std::string(70, '#') << std::endl;
 
-    // Initialize base image (from directory or synthetic)
+    
     init_base_image(config.images_dir);
     std::cout << std::endl;
     
@@ -805,9 +808,9 @@ std::vector<TestResult> run_all_advanced_tests(const AdvancedTestConfig& config)
     return all_results;
 }
 
-// ============================================================================
-// Export Functions
-// ============================================================================
+
+
+
 
 void export_advanced_results_csv(const std::vector<TestResult>& results,
                                   const std::string& filepath) {

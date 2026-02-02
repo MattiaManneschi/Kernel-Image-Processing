@@ -298,12 +298,36 @@ else
     ./bin/imgproc --advanced-tests
 fi
 
+# =============================================================================
+# Generate all filtered images (Wikipedia-style examples)
+# =============================================================================
+
+echo ""
+echo "=============================================="
+echo "  Generating Filtered Images (All Kernels)"
+echo "=============================================="
+echo ""
+
+# Pick a RANDOM Kodak image
+if [ -d "./images/input/kodak" ] && [ -n "$(ls -A ./images/input/kodak/*.png 2>/dev/null)" ]; then
+    # Get all Kodak images and pick one randomly
+    KODAK_IMAGES=(./images/input/kodak/*.png)
+    RANDOM_INDEX=$((RANDOM % ${#KODAK_IMAGES[@]}))
+    INPUT_IMG="${KODAK_IMAGES[$RANDOM_INDEX]}"
+    echo "Randomly selected: $INPUT_IMG"
+    ./bin/imgproc -i "$INPUT_IMG" --generate-all
+else
+    echo "No Kodak images found, skipping image generation"
+fi
+
 echo ""
 echo "=============================================="
 echo "  Tests Complete!"
 echo "=============================================="
 echo ""
-echo "Results saved to: results/advanced_tests/advanced_results.csv"
+echo "Results saved to:"
+echo "  - results/advanced_tests/advanced_results.csv"
+echo "  - images/output/<image_name>/"
 echo ""
 
 # Keep terminal open

@@ -6,9 +6,9 @@
 #include <cstdint>
 #include <stdexcept>
 
-// ============================================================================
-// Image structure
-// ============================================================================
+
+
+
 
 struct Image {
     int width;
@@ -22,7 +22,7 @@ struct Image {
         data.resize(w * h * c);
     }
     
-    // Get pixel value at (x, y) for channel c
+    
     uint8_t& at(int x, int y, int c) {
         return data[(y * width + x) * channels + c];
     }
@@ -31,33 +31,33 @@ struct Image {
         return data[(y * width + x) * channels + c];
     }
     
-    // Get total size in bytes
+    
     size_t size_bytes() const {
         return data.size();
     }
     
-    // Get total number of pixels
+    
     size_t num_pixels() const {
         return width * height;
     }
     
-    // Check if image is valid
+    
     bool is_valid() const {
         return width > 0 && height > 0 && channels > 0 && !data.empty();
     }
     
-    // Clear image
+    
     void clear() {
         width = height = channels = 0;
         data.clear();
     }
     
-    // Fill with value
+    
     void fill(uint8_t value) {
         std::fill(data.begin(), data.end(), value);
     }
     
-    // Create a copy
+    
     Image clone() const {
         Image copy;
         copy.width = width;
@@ -68,9 +68,9 @@ struct Image {
     }
 };
 
-// ============================================================================
-// Image I/O functions
-// ============================================================================
+
+
+
 
 /**
  * Load image from file
@@ -138,4 +138,4 @@ double compute_psnr(const Image& img1, const Image& img2);
  */
 void print_image_info(const Image& image, const std::string& name = "Image");
 
-#endif // IMAGE_IO_H
+#endif 

@@ -10,9 +10,9 @@
 #include <random>
 #include <algorithm>
 
-// ============================================================================
-// Image loading
-// ============================================================================
+
+
+
 
 Image load_image(const std::string& path, int force_channels) {
     Image image;
@@ -39,9 +39,9 @@ Image load_image(const std::string& path, int force_channels) {
     return image;
 }
 
-// ============================================================================
-// Image saving
-// ============================================================================
+
+
+
 
 void save_image(const std::string& path, const Image& image, int quality) {
     if (!image.is_valid()) {
@@ -77,15 +77,15 @@ void save_image(const std::string& path, const Image& image, int quality) {
     LOG_DEBUG("Saved image: ", path);
 }
 
-// ============================================================================
-// Test image generation
-// ============================================================================
+
+
+
 
 Image create_test_image(int width, int height, int channels, const std::string& pattern) {
     Image image(width, height, channels);
     
     if (pattern == "gradient") {
-        // Diagonal gradient
+        
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
                 float fx = static_cast<float>(x) / (width - 1);
@@ -93,17 +93,17 @@ Image create_test_image(int width, int height, int channels, const std::string& 
                 
                 for (int c = 0; c < channels; c++) {
                     float value;
-                    if (c == 0) value = fx * 255;           // R: horizontal gradient
-                    else if (c == 1) value = fy * 255;      // G: vertical gradient
-                    else if (c == 2) value = (fx + fy) * 127.5f; // B: diagonal
-                    else value = 255;                        // A: opaque
+                    if (c == 0) value = fx * 255;           
+                    else if (c == 1) value = fy * 255;      
+                    else if (c == 2) value = (fx + fy) * 127.5f; 
+                    else value = 255;                        
                     
                     image.at(x, y, c) = static_cast<uint8_t>(clamp(value, 0.0f, 255.0f));
                 }
             }
         }
     } else if (pattern == "checkerboard") {
-        // Checkerboard pattern
+        
         int block_size = std::max(width, height) / 8;
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
@@ -112,12 +112,12 @@ Image create_test_image(int width, int height, int channels, const std::string& 
                 
                 for (int c = 0; c < channels; c++) {
                     if (c < 3) image.at(x, y, c) = value;
-                    else image.at(x, y, c) = 255;  // Alpha
+                    else image.at(x, y, c) = 255;  
                 }
             }
         }
     } else if (pattern == "noise") {
-        // Random noise
+        
         std::random_device rd;
         std::mt19937 gen(rd());
         std::uniform_int_distribution<> dis(0, 255);
@@ -126,15 +126,15 @@ Image create_test_image(int width, int height, int channels, const std::string& 
             for (int x = 0; x < width; x++) {
                 for (int c = 0; c < channels; c++) {
                     if (c < 3) image.at(x, y, c) = static_cast<uint8_t>(dis(gen));
-                    else image.at(x, y, c) = 255;  // Alpha
+                    else image.at(x, y, c) = 255;  
                 }
             }
         }
     } else if (pattern == "solid") {
-        // Solid gray
+        
         image.fill(128);
         if (channels == 4) {
-            // Set alpha to 255
+            
             for (int y = 0; y < height; y++) {
                 for (int x = 0; x < width; x++) {
                     image.at(x, y, 3) = 255;
@@ -142,7 +142,7 @@ Image create_test_image(int width, int height, int channels, const std::string& 
             }
         }
     } else if (pattern == "circles") {
-        // Concentric circles (good for testing blur)
+        
         image.fill(255);
         int cx = width / 2;
         int cy = height / 2;
@@ -154,7 +154,7 @@ Image create_test_image(int width, int height, int channels, const std::string& 
                 float dy = y - cy;
                 float dist = std::sqrt(dx*dx + dy*dy);
                 
-                // Create rings
+                
                 int ring = static_cast<int>(dist / (max_radius / 10.0f));
                 uint8_t value = (ring % 2 == 0) ? 0 : 255;
                 
@@ -171,9 +171,9 @@ Image create_test_image(int width, int height, int channels, const std::string& 
     return image;
 }
 
-// ============================================================================
-// Image conversion
-// ============================================================================
+
+
+
 
 Image to_grayscale(const Image& image) {
     if (image.channels == 1) {
@@ -184,7 +184,7 @@ Image to_grayscale(const Image& image) {
     
     for (int y = 0; y < image.height; y++) {
         for (int x = 0; x < image.width; x++) {
-            // Standard luminosity formula
+            
             float r = image.at(x, y, 0);
             float g = image.at(x, y, 1);
             float b = image.at(x, y, 2);
@@ -196,9 +196,9 @@ Image to_grayscale(const Image& image) {
     return gray;
 }
 
-// ============================================================================
-// Image comparison
-// ============================================================================
+
+
+
 
 bool images_equal(const Image& img1, const Image& img2, int tolerance) {
     if (img1.width != img2.width || img1.height != img2.height || 
@@ -230,16 +230,16 @@ double compute_psnr(const Image& img1, const Image& img2) {
     mse /= img1.data.size();
     
     if (mse < 1e-10) {
-        return 100.0;  // Identical images
+        return 100.0;  
     }
     
     double max_val = 255.0;
     return 10.0 * std::log10((max_val * max_val) / mse);
 }
 
-// ============================================================================
-// Utility functions
-// ============================================================================
+
+
+
 
 void print_image_info(const Image& image, const std::string& name) {
     std::cout << name << ": " 

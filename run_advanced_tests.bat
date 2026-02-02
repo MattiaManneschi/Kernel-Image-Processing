@@ -238,10 +238,45 @@ if %IMG_COUNT% GEQ 1 (
 
 echo.
 echo ==============================================
+echo   Generating Filtered Images (All Kernels)
+echo ==============================================
+echo.
+
+REM Pick a RANDOM Kodak image
+set /a COUNT=0
+for %%f in (%KODAK_DIR%\kodim*.png) do set /a COUNT+=1
+
+if %COUNT% GEQ 1 (
+    REM Generate random index
+    set /a RAND_IDX=%RANDOM% %% %COUNT%
+
+    REM Find the image at that index
+    set /a CURR_IDX=0
+    for %%f in (%KODAK_DIR%\kodim*.png) do (
+        if !CURR_IDX! EQU !RAND_IDX! (
+            set INPUT_IMG=%%f
+            goto :run_generate
+        )
+        set /a CURR_IDX+=1
+    )
+)
+
+:run_generate
+if defined INPUT_IMG (
+    echo Randomly selected: %INPUT_IMG%
+    bin\imgproc.exe -i "%INPUT_IMG%" --generate-all
+) else (
+    echo No Kodak images found, skipping image generation
+)
+
+echo.
+echo ==============================================
 echo   Tests Complete!
 echo ==============================================
 echo.
-echo Results saved to: results\advanced_tests\advanced_results.csv
+echo Results saved to:
+echo   - results\advanced_tests\advanced_results.csv
+echo   - images\output\^<image_name^>\
 echo.
 
 pause
