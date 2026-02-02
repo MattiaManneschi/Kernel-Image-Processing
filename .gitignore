@@ -1,11 +1,6 @@
 # Build folders
 bin/
 build/
-obj/
-
-# System files
-.DS_Store
-Thumbs.db
 
 # IDE configurations
 .vscode/
