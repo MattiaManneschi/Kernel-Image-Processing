@@ -5,9 +5,9 @@
 #include "image_io.h"
 #include "kernels.h"
 
-// ============================================================================
-// CPU Convolution - Sequential Implementation
-// ============================================================================
+
+
+
 
 /**
  * Apply convolution filter to image (sequential CPU version)
@@ -43,15 +43,15 @@ Image convolve_cpu(const Image& input, const ConvKernel& kernel);
  */
 Image convolve_cpu_timed(const Image& input, const ConvKernel& kernel, double& time_ms);
 
-// ============================================================================
-// Edge handling modes
-// ============================================================================
+
+
+
 
 enum class EdgeMode {
-    CLAMP,      // Clamp to edge pixels (default)
-    ZERO,       // Treat outside as zero
-    MIRROR,     // Mirror reflection
-    WRAP        // Wrap around
+    CLAMP,      
+    ZERO,       
+    MIRROR,     
+    WRAP        
 };
 
 /**
@@ -71,9 +71,9 @@ void convolve_cpu_edge(const uint8_t* input, uint8_t* output,
                        const float* kernel, int kernel_size,
                        EdgeMode edge_mode);
 
-// ============================================================================
-// Separable convolution (optimization for separable kernels)
-// ============================================================================
+
+
+
 
 /**
  * Check if kernel is separable (can be decomposed into horizontal and vertical passes)
@@ -100,4 +100,4 @@ Image convolve_cpu_separable(const Image& input,
                              const std::vector<float>& h_kernel,
                              const std::vector<float>& v_kernel);
 
-#endif // CPU_CONVOLUTION_H
+#endif 

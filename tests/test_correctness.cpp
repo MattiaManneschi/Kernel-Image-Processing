@@ -12,12 +12,12 @@
 #include "../src/gpu_convolution.cuh"
 #include "../src/utils.h"
 
-// Test configuration
+
 const int TEST_SIZES[] = {64, 128, 256, 512};
 const int NUM_TEST_SIZES = sizeof(TEST_SIZES) / sizeof(TEST_SIZES[0]);
-const int TOLERANCE = 2;  // Max allowed pixel difference
+const int TOLERANCE = 2;  
 
-// Test result
+
 struct TestResult {
     std::string test_name;
     bool passed;
@@ -41,13 +41,13 @@ TestResult test_implementation(const Image& image, const ConvKernel& kernel,
     result.test_name = impl_name + " - " + kernel.name + " (" + 
                        std::to_string(image.width) + "x" + std::to_string(image.height) + ")";
     
-    // CPU reference
+    
     Image cpu_output = convolve_cpu(image, kernel);
     
-    // CUDA implementation
+    
     Image cuda_output = convolve_cuda(image, kernel, opt_level);
     
-    // Compare
+    
     result.max_diff = 0;
     for (size_t i = 0; i < cpu_output.data.size(); i++) {
         double diff = std::abs(static_cast<int>(cpu_output.data[i]) - 
@@ -67,7 +67,7 @@ int main(int argc, char* argv[]) {
     std::cout << "Kernel Image Processing - Test Suite\n";
     std::cout << "========================================\n\n";
     
-    // Check CUDA availability
+    
     if (!cuda_available()) {
         std::cerr << "ERROR: No CUDA device available\n";
         return 1;
@@ -76,7 +76,7 @@ int main(int argc, char* argv[]) {
     std::vector<TestResult> all_results;
     int passed = 0, failed = 0;
     
-    // Test kernels
+    
     std::vector<ConvKernel> kernels = {
         Kernels::gaussian_3x3(),
         Kernels::box_blur_3x3(),
@@ -85,18 +85,18 @@ int main(int argc, char* argv[]) {
         Kernels::gaussian_5x5()
     };
     
-    // Test CUDA implementations
+    
     std::vector<std::pair<std::string, CudaOptLevel>> implementations = {
         {"CUDA Global", CudaOptLevel::GLOBAL},
         {"CUDA Constant", CudaOptLevel::CONSTANT},
         {"CUDA Shared", CudaOptLevel::SHARED}
     };
     
-    // Run tests
+    
     for (int size : TEST_SIZES) {
         std::cout << "Testing " << size << "x" << size << " images...\n";
         
-        // Create test image
+        
         Image image = create_test_image(size, size, 3, "gradient");
         
         for (const auto& kernel : kernels) {
@@ -113,7 +113,7 @@ int main(int argc, char* argv[]) {
         std::cout << "\n";
     }
     
-    // Summary
+    
     std::cout << "========================================\n";
     std::cout << "Test Summary\n";
     std::cout << "========================================\n";

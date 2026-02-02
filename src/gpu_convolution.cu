@@ -7,19 +7,19 @@
 #include <iostream>
 #include <algorithm>
 
-// ============================================================================
-// Constants
-// ============================================================================
+
+
+
 
 #define MAX_KERNEL_SIZE 7
 #define MAX_KERNEL_ELEMENTS (MAX_KERNEL_SIZE * MAX_KERNEL_SIZE)
 
-// Constant memory for kernel coefficients
+
 __constant__ float d_kernel[MAX_KERNEL_ELEMENTS];
 
-// ============================================================================
-// CUDA Device Info
-// ============================================================================
+
+
+
 
 void print_cuda_info() {
     int device_count;
@@ -52,9 +52,9 @@ int get_cuda_device_count() {
     return device_count;
 }
 
-// ============================================================================
-// CUDA Kernel: Global Memory Version (Baseline)
-// ============================================================================
+
+
+
 
 __global__ void convolve_kernel_global(
     const uint8_t* __restrict__ input,
@@ -90,9 +90,9 @@ __global__ void convolve_kernel_global(
     }
 }
 
-// ============================================================================
-// CUDA Kernel: Constant Memory Version
-// ============================================================================
+
+
+
 
 __global__ void convolve_kernel_constant(
     const uint8_t* __restrict__ input,
@@ -127,9 +127,9 @@ __global__ void convolve_kernel_constant(
     }
 }
 
-// ============================================================================
-// CUDA Kernel: Shared Memory Version
-// ============================================================================
+
+
+
 
 template<int BLOCK_SIZE, int KERNEL_RADIUS>
 __global__ void convolve_kernel_shared(
@@ -149,7 +149,7 @@ __global__ void convolve_kernel_shared(
     int half = kernel_size / 2;
     
     for (int c = 0; c < channels; c++) {
-        // Load center
+        
         int shared_x = tx + KERNEL_RADIUS;
         int shared_y = ty + KERNEL_RADIUS;
         
@@ -160,7 +160,7 @@ __global__ void convolve_kernel_shared(
             tile[shared_y][shared_x] = 0.0f;
         }
         
-        // Load halo regions
+        
         if (tx < KERNEL_RADIUS) {
             int load_x = max(0, (int)(blockIdx.x * BLOCK_SIZE) - KERNEL_RADIUS + tx);
             int load_y = min(max(y, 0), height - 1);
@@ -208,9 +208,9 @@ __global__ void convolve_kernel_shared(
     }
 }
 
-// ============================================================================
-// Host wrapper functions
-// ============================================================================
+
+
+
 
 void convolve_cuda_global(const uint8_t* input, uint8_t* output,
                           int width, int height, int channels,
@@ -319,9 +319,9 @@ void convolve_cuda_optimized(const uint8_t* input, uint8_t* output,
     convolve_cuda_shared(input, output, width, height, channels, kernel, kernel_size, block_size);
 }
 
-// ============================================================================
-// High-level Image API
-// ============================================================================
+
+
+
 
 Image convolve_cuda(const Image& input, const ConvKernel& kernel,
                     CudaOptLevel opt_level, int block_size) {
@@ -406,18 +406,18 @@ std::map<std::string, double> benchmark_cuda_implementations(
     std::map<std::string, double> results;
     double time;
     
-    // Warm-up
+    
     convolve_cuda_timed(input, kernel, time, CudaOptLevel::SHARED, block_size);
     
-    // Global
+    
     double total = 0;
     for (int i = 0; i < iterations; i++) {
         convolve_cuda(input, kernel, CudaOptLevel::GLOBAL, block_size);
-        // Manual timing for global
+        
     }
     results["cuda_global"] = total / iterations;
     
-    // Constant
+    
     total = 0;
     for (int i = 0; i < iterations; i++) {
         convolve_cuda_timed(input, kernel, time, CudaOptLevel::CONSTANT, block_size);
@@ -425,7 +425,7 @@ std::map<std::string, double> benchmark_cuda_implementations(
     }
     results["cuda_constant"] = total / iterations;
     
-    // Shared
+    
     total = 0;
     for (int i = 0; i < iterations; i++) {
         convolve_cuda_timed(input, kernel, time, CudaOptLevel::SHARED, block_size);

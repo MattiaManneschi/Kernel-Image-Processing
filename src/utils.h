@@ -11,9 +11,9 @@
 #include <cmath>
 #include <fstream>
 
-// ============================================================================
-// Timer class for high-resolution timing
-// ============================================================================
+
+
+
 
 class Timer {
 public:
@@ -55,9 +55,9 @@ private:
     double elapsed_;
 };
 
-// ============================================================================
-// Logging utilities
-// ============================================================================
+
+
+
 
 enum class LogLevel {
     DEBUG,
@@ -131,15 +131,15 @@ private:
     bool verbose_;
 };
 
-// Convenience macros
+
 #define LOG_DEBUG(...) Logger::instance().debug(__VA_ARGS__)
 #define LOG_INFO(...) Logger::instance().info(__VA_ARGS__)
 #define LOG_WARNING(...) Logger::instance().warning(__VA_ARGS__)
 #define LOG_ERROR(...) Logger::instance().error(__VA_ARGS__)
 
-// ============================================================================
-// String utilities
-// ============================================================================
+
+
+
 
 inline std::string format_time(double ms) {
     std::ostringstream oss;
@@ -165,9 +165,9 @@ inline std::string format_size(int width, int height) {
     return oss.str();
 }
 
-// ============================================================================
-// Math utilities
-// ============================================================================
+
+
+
 
 template<typename T>
 inline T clamp(T value, T min_val, T max_val) {
@@ -202,9 +202,9 @@ inline double compute_median(std::vector<double> values) {
     return values[n/2];
 }
 
-// ============================================================================
-// File utilities
-// ============================================================================
+
+
+
 
 inline bool file_exists(const std::string& path) {
     std::ifstream f(path);
@@ -235,9 +235,9 @@ inline std::string remove_extension(const std::string& path) {
     return path;
 }
 
-// ============================================================================
-// Progress bar
-// ============================================================================
+
+
+
 
 class ProgressBar {
 public:
@@ -280,4 +280,4 @@ private:
     int width_;
 };
 
-#endif // UTILS_H
+#endif 

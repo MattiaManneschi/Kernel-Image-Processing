@@ -7,37 +7,37 @@
 #include "image_io.h"
 #include "kernels.h"
 
-// ============================================================================
-// Test Result Structures
-// ============================================================================
+
+
+
 
 struct TestResult {
     std::string test_name;
     std::string configuration;
     double time_ms;
     double speedup;
-    double throughput;  // Megapixels/sec or GB/s depending on test
+    double throughput;  
     std::string notes;
 };
 
 struct AdvancedTestConfig {
-    bool run_image_type_test = true;      // Test 1: Real vs Synthetic
-    bool run_channels_test = true;         // Test 2: Grayscale vs RGB vs RGBA
-    bool run_resolution_test = true;       // Test 3: Non-square dimensions
-    bool run_occupancy_test = true;        // Test 4: Block size sweep
-    bool run_separable_test = true;        // Test 5: 2D vs Separable
-    bool run_bandwidth_test = true;        // Test 6: Memory bandwidth
-    bool run_multistream_test = true;      // Test 7: CUDA streams
+    bool run_image_type_test = true;      
+    bool run_channels_test = true;         
+    bool run_resolution_test = true;       
+    bool run_occupancy_test = true;        
+    bool run_separable_test = true;        
+    bool run_bandwidth_test = true;        
+    bool run_multistream_test = true;      
 
     int iterations = 10;
     std::string output_dir = "results/advanced_tests/";
-    std::string images_dir = "";           // Empty = use synthetic, otherwise load from dir
+    std::string images_dir = "";           
     bool verbose = true;
 };
 
-// ============================================================================
-// Advanced Test Functions
-// ============================================================================
+
+
+
 
 /**
  * Test 1: Compare performance on different image types
@@ -91,9 +91,9 @@ std::vector<TestResult> test_memory_bandwidth(const AdvancedTestConfig& config);
  */
 std::vector<TestResult> test_cuda_streams(const AdvancedTestConfig& config);
 
-// ============================================================================
-// Main Runner
-// ============================================================================
+
+
+
 
 /**
  * Run all advanced tests
@@ -111,4 +111,4 @@ void export_advanced_results_csv(const std::vector<TestResult>& results,
  */
 void print_advanced_results(const std::vector<TestResult>& results);
 
-#endif // ADVANCED_TESTS_H
+#endif 

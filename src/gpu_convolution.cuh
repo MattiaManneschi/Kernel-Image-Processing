@@ -5,9 +5,9 @@
 #include "image_io.h"
 #include "kernels.h"
 
-// ============================================================================
-// CUDA Error Checking
-// ============================================================================
+
+
+
 
 #define CUDA_CHECK(call) \
     do { \
@@ -19,9 +19,9 @@
         } \
     } while(0)
 
-// ============================================================================
-// CUDA Device Info
-// ============================================================================
+
+
+
 
 /**
  * Print CUDA device information
@@ -39,18 +39,18 @@ bool cuda_available();
  */
 int get_cuda_device_count();
 
-// ============================================================================
-// GPU Convolution - Different Implementations
-// ============================================================================
+
+
+
 
 /**
  * Optimization levels for CUDA convolution
  */
 enum class CudaOptLevel {
-    GLOBAL,         // Basic global memory implementation
-    CONSTANT,       // Kernel in constant memory
-    SHARED,         // Shared memory tiling
-    FULL            // All optimizations
+    GLOBAL,         
+    CONSTANT,       
+    SHARED,         
+    FULL            
 };
 
 /**
@@ -94,9 +94,9 @@ void convolve_cuda_optimized(const uint8_t* input, uint8_t* output,
                              const float* kernel, int kernel_size,
                              int block_size = 16);
 
-// ============================================================================
-// High-level Image API
-// ============================================================================
+
+
+
 
 /**
  * Apply CUDA convolution to Image object
@@ -141,9 +141,9 @@ std::map<std::string, double> benchmark_cuda_implementations(
     const Image& input, const ConvKernel& kernel,
     int iterations = 10, int block_size = 16);
 
-// ============================================================================
-// Utility functions
-// ============================================================================
+
+
+
 
 /**
  * Convert optimization level to string
@@ -155,4 +155,4 @@ const char* opt_level_to_string(CudaOptLevel level);
  */
 CudaOptLevel string_to_opt_level(const std::string& str);
 
-#endif // GPU_CONVOLUTION_CUH
+#endif 

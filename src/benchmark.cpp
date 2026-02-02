@@ -12,9 +12,9 @@
 #include <random>
 #include <set>
 
-// ============================================================================
-// Single Benchmark Implementation
-// ============================================================================
+
+
+
 
 BenchmarkResult benchmark_single(const Image& image, const ConvKernel& kernel,
                                  const std::string& implementation,
@@ -31,7 +31,7 @@ BenchmarkResult benchmark_single(const Image& image, const ConvKernel& kernel,
     std::vector<double> times;
     times.reserve(iterations);
 
-    // Warm-up runs
+    
     for (int i = 0; i < 2; i++) {
         if (implementation == "cpu") {
             double warmup;
@@ -45,7 +45,7 @@ BenchmarkResult benchmark_single(const Image& image, const ConvKernel& kernel,
         }
     }
 
-    // Benchmark runs
+    
     for (int i = 0; i < iterations; i++) {
         double time_ms;
 
@@ -63,24 +63,24 @@ BenchmarkResult benchmark_single(const Image& image, const ConvKernel& kernel,
         times.push_back(time_ms);
     }
 
-    // Calculate statistics
+    
     result.time_ms = compute_mean(times);
     result.stddev_ms = compute_stddev(times);
     result.min_time_ms = *std::min_element(times.begin(), times.end());
     result.max_time_ms = *std::max_element(times.begin(), times.end());
 
-    // Calculate throughput (megapixels per second)
+    
     double total_pixels = static_cast<double>(image.width * image.height);
     result.throughput_mpps = (total_pixels / 1e6) / (result.time_ms / 1000.0);
 
     return result;
 }
 
-// ============================================================================
-// Full Benchmark Suite
-// ============================================================================
 
-// Helper function to find Kodak images
+
+
+
+
 static std::vector<std::string> find_kodak_images() {
     std::vector<std::string> paths;
     std::vector<std::string> search_dirs = {
@@ -104,7 +104,7 @@ static std::vector<std::string> find_kodak_images() {
     return paths;
 }
 
-// Helper function to resize image to target size
+
 static Image resize_image(const Image& src, int target_size) {
     if (src.width == target_size && src.height == target_size) {
         return src;
@@ -141,7 +141,7 @@ std::vector<BenchmarkResult> run_all_benchmarks(const BenchmarkConfig& config) {
     std::cout << "Running Benchmark Suite" << std::endl;
     std::cout << "========================================\n" << std::endl;
 
-    // Find Kodak images and pick one randomly
+    
     std::vector<std::string> kodak_paths = find_kodak_images();
     Image base_image;
     bool using_kodak = false;
@@ -167,7 +167,7 @@ std::vector<BenchmarkResult> run_all_benchmarks(const BenchmarkConfig& config) {
     }
     std::cout << std::endl;
 
-    // Save original image if examples requested (use 512x512 for examples)
+    
     std::string base_name = "kodak";
     if (config.save_examples && using_kodak) {
         Image example_image = resize_image(base_image, 512);
@@ -176,12 +176,12 @@ std::vector<BenchmarkResult> run_all_benchmarks(const BenchmarkConfig& config) {
         std::cout << "Saved: " << orig_path << std::endl;
     }
 
-    // Track which examples we've already saved
+    
     std::set<std::string> saved_examples;
 
-    // For each image size
+    
     for (int img_size : config.image_sizes) {
-        // Get image at target size
+        
         Image image;
         if (using_kodak) {
             image = resize_image(base_image, img_size);
@@ -193,13 +193,13 @@ std::vector<BenchmarkResult> run_all_benchmarks(const BenchmarkConfig& config) {
             std::cout << "Image size: " << img_size << "x" << img_size << std::endl;
         }
 
-        // For each kernel type
+        
         for (const std::string& kernel_type : config.kernel_types) {
-            // For each kernel size
+            
             for (int kernel_size : config.kernel_sizes) {
                 current_test++;
 
-                // Skip unsupported combinations
+                
                 if (kernel_type == "sharpen" && kernel_size != 3) continue;
                 if (kernel_type == "sobel_x" && kernel_size != 3) continue;
                 if (kernel_type == "sobel_y" && kernel_size != 3) continue;
@@ -224,7 +224,7 @@ std::vector<BenchmarkResult> run_all_benchmarks(const BenchmarkConfig& config) {
                     }
                 }
 
-                // CPU baseline
+                
                 BenchmarkResult cpu_result;
                 if (config.test_cpu) {
                     cpu_result = benchmark_single(image, kernel, "cpu",
@@ -232,7 +232,7 @@ std::vector<BenchmarkResult> run_all_benchmarks(const BenchmarkConfig& config) {
                     all_results.push_back(cpu_result);
                 }
 
-                // CUDA implementations
+                
                 for (int block_size : config.block_sizes) {
                     if (config.test_cuda_global) {
                         BenchmarkResult result = benchmark_single(image, kernel,
@@ -271,7 +271,7 @@ std::vector<BenchmarkResult> run_all_benchmarks(const BenchmarkConfig& config) {
         }
     }
 
-    // Export results
+    
     std::string csv_path = config.output_dir + "benchmark_results.csv";
     export_results_csv(all_results, csv_path);
 
@@ -286,20 +286,20 @@ std::vector<BenchmarkResult> run_all_benchmarks(const std::string& output_dir) {
     return run_all_benchmarks(config);
 }
 
-// ============================================================================
-// Implementation Comparison
-// ============================================================================
+
+
+
 
 std::map<std::string, double> compare_implementations(
     const Image& image, const ConvKernel& kernel, int iterations) {
     
     std::map<std::string, double> speedups;
     
-    // CPU baseline
+    
     BenchmarkResult cpu = benchmark_single(image, kernel, "cpu", iterations);
     speedups["cpu"] = 1.0;
     
-    // CUDA implementations
+    
     std::vector<std::string> cuda_impls = {"cuda_global", "cuda_constant", "cuda_shared"};
     
     for (const auto& impl : cuda_impls) {
@@ -310,9 +310,9 @@ std::map<std::string, double> compare_implementations(
     return speedups;
 }
 
-// ============================================================================
-// Export Functions
-// ============================================================================
+
+
+
 
 void export_results_csv(const std::vector<BenchmarkResult>& results,
                         const std::string& filepath) {
@@ -322,12 +322,12 @@ void export_results_csv(const std::vector<BenchmarkResult>& results,
         throw std::runtime_error("Cannot open file for writing: " + filepath);
     }
     
-    // Header
+    
     file << "image_size,image_width,image_height,kernel_size,kernel_name,"
          << "implementation,block_size,time_ms,stddev_ms,min_time_ms,max_time_ms,"
          << "speedup,throughput_mpps\n";
     
-    // Data rows
+    
     for (const auto& r : results) {
         file << r.image_width << ","
              << r.image_width << ","
@@ -379,7 +379,7 @@ void print_results_summary(const std::vector<BenchmarkResult>& results) {
         print_result(r);
     }
     
-    // Find best speedup
+    
     auto best = std::max_element(results.begin(), results.end(),
         [](const BenchmarkResult& a, const BenchmarkResult& b) {
             return a.speedup < b.speedup;
@@ -394,20 +394,20 @@ void print_results_summary(const std::vector<BenchmarkResult>& results) {
     }
 }
 
-// ============================================================================
-// Validation Functions
-// ============================================================================
+
+
+
 
 bool validate_cuda_correctness(const Image& image, const ConvKernel& kernel,
                                int tolerance) {
     
-    // CPU reference
+    
     Image cpu_output = convolve_cpu(image, kernel);
     
-    // CUDA output
+    
     Image cuda_output = convolve_cuda(image, kernel, CudaOptLevel::SHARED);
     
-    // Compare
+    
     return images_equal(cpu_output, cuda_output, tolerance);
 }
 
@@ -416,11 +416,11 @@ std::map<std::string, bool> validate_all_implementations(
     
     std::map<std::string, bool> validation;
     
-    // CPU is the reference
+    
     Image cpu_output = convolve_cpu(image, kernel);
     validation["cpu"] = true;
     
-    // Validate CUDA implementations
+    
     std::vector<std::pair<std::string, CudaOptLevel>> impls = {
         {"cuda_global", CudaOptLevel::GLOBAL},
         {"cuda_constant", CudaOptLevel::CONSTANT},

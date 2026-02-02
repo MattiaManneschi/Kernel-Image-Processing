@@ -4,9 +4,9 @@
 #include <cmath>
 #include <algorithm>
 
-// ============================================================================
-// ConvKernel methods
-// ============================================================================
+
+
+
 
 void ConvKernel::print() const {
     std::cout << name << " (" << size << "x" << size << "):" << std::endl;
@@ -20,9 +20,9 @@ void ConvKernel::print() const {
     }
 }
 
-// ============================================================================
-// Box blur kernels
-// ============================================================================
+
+
+
 
 namespace Kernels {
 
@@ -52,9 +52,9 @@ ConvKernel box_blur_7x7() {
     return ConvKernel("Box Blur 7x7", "box", 7, data);
 }
 
-// ============================================================================
-// Gaussian blur kernels
-// ============================================================================
+
+
+
 
 ConvKernel gaussian_3x3() {
     float s = 16.0f;
@@ -77,13 +77,13 @@ ConvKernel gaussian_5x5() {
 }
 
 ConvKernel gaussian_7x7() {
-    // Approximation with sigma ~= 1.0
+    
     return create_gaussian_kernel(7, 1.0f);
 }
 
-// ============================================================================
-// Sharpening kernels
-// ============================================================================
+
+
+
 
 ConvKernel sharpen_3x3() {
     return ConvKernel("Sharpen 3x3", "sharpen", 3, {
@@ -101,9 +101,9 @@ ConvKernel sharpen_strong_3x3() {
     }, false);
 }
 
-// ============================================================================
-// Edge detection - Sobel
-// ============================================================================
+
+
+
 
 ConvKernel sobel_x_3x3() {
     return ConvKernel("Sobel X 3x3", "sobel_x", 3, {
@@ -121,9 +121,9 @@ ConvKernel sobel_y_3x3() {
     }, false);
 }
 
-// ============================================================================
-// Edge detection - Prewitt
-// ============================================================================
+
+
+
 
 ConvKernel prewitt_x_3x3() {
     return ConvKernel("Prewitt X 3x3", "prewitt_x", 3, {
@@ -141,9 +141,9 @@ ConvKernel prewitt_y_3x3() {
     }, false);
 }
 
-// ============================================================================
-// Edge detection - Laplacian
-// ============================================================================
+
+
+
 
 ConvKernel laplacian_3x3() {
     return ConvKernel("Laplacian 3x3", "laplacian", 3, {
@@ -161,9 +161,9 @@ ConvKernel laplacian_diagonal_3x3() {
     }, false);
 }
 
-// ============================================================================
-// Emboss
-// ============================================================================
+
+
+
 
 ConvKernel emboss_3x3() {
     return ConvKernel("Emboss 3x3", "emboss", 3, {
@@ -173,9 +173,9 @@ ConvKernel emboss_3x3() {
     }, false);
 }
 
-// ============================================================================
-// Identity
-// ============================================================================
+
+
+
 
 ConvKernel identity_3x3() {
     return ConvKernel("Identity 3x3", "identity", 3, {
@@ -185,17 +185,17 @@ ConvKernel identity_3x3() {
     }, false);
 }
 
-} // namespace Kernels
+} 
 
-// ============================================================================
-// Kernel factory implementation
-// ============================================================================
+
+
+
 
 ConvKernel get_kernel(const std::string& name, int size) {
     std::string lower_name = name;
     std::transform(lower_name.begin(), lower_name.end(), lower_name.begin(), ::tolower);
     
-    // Box blur
+    
     if (lower_name == "box" || lower_name == "box_blur") {
         if (size == 3) return Kernels::box_blur_3x3();
         if (size == 5) return Kernels::box_blur_5x5();
@@ -203,7 +203,7 @@ ConvKernel get_kernel(const std::string& name, int size) {
         return create_box_kernel(size);
     }
     
-    // Gaussian blur
+    
     if (lower_name == "gaussian" || lower_name == "gaussian_blur") {
         if (size == 3) return Kernels::gaussian_3x3();
         if (size == 5) return Kernels::gaussian_5x5();
@@ -211,7 +211,7 @@ ConvKernel get_kernel(const std::string& name, int size) {
         return create_gaussian_kernel(size, size / 6.0f);
     }
     
-    // Sharpen
+    
     if (lower_name == "sharpen") {
         return Kernels::sharpen_3x3();
     }
@@ -219,7 +219,7 @@ ConvKernel get_kernel(const std::string& name, int size) {
         return Kernels::sharpen_strong_3x3();
     }
     
-    // Sobel
+    
     if (lower_name == "sobel_x" || lower_name == "sobelx") {
         return Kernels::sobel_x_3x3();
     }
@@ -227,7 +227,7 @@ ConvKernel get_kernel(const std::string& name, int size) {
         return Kernels::sobel_y_3x3();
     }
     
-    // Prewitt
+    
     if (lower_name == "prewitt_x" || lower_name == "prewittx") {
         return Kernels::prewitt_x_3x3();
     }
@@ -235,7 +235,7 @@ ConvKernel get_kernel(const std::string& name, int size) {
         return Kernels::prewitt_y_3x3();
     }
     
-    // Laplacian
+    
     if (lower_name == "laplacian") {
         return Kernels::laplacian_3x3();
     }
@@ -243,12 +243,12 @@ ConvKernel get_kernel(const std::string& name, int size) {
         return Kernels::laplacian_diagonal_3x3();
     }
     
-    // Emboss
+    
     if (lower_name == "emboss") {
         return Kernels::emboss_3x3();
     }
     
-    // Identity
+    
     if (lower_name == "identity" || lower_name == "none") {
         return Kernels::identity_3x3();
     }
@@ -264,9 +264,9 @@ std::vector<std::string> get_available_kernels() {
     };
 }
 
-// ============================================================================
-// Custom kernel creation
-// ============================================================================
+
+
+
 
 ConvKernel create_gaussian_kernel(int size, float sigma) {
     if (size % 2 == 0) {
@@ -285,7 +285,7 @@ ConvKernel create_gaussian_kernel(int size, float sigma) {
         }
     }
     
-    // Normalize
+    
     for (float& v : data) {
         v /= sum;
     }

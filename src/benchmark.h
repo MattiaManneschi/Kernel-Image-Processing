@@ -7,28 +7,28 @@
 #include "image_io.h"
 #include "kernels.h"
 
-// ============================================================================
-// Benchmark Result Structure
-// ============================================================================
+
+
+
 
 struct BenchmarkResult {
-    // Configuration
+    
     int image_width;
     int image_height;
     int kernel_size;
     std::string kernel_name;
-    std::string implementation;  // "cpu", "cuda_global", "cuda_constant", "cuda_shared"
+    std::string implementation;  
     int block_size;
     
-    // Results
-    double time_ms;          // Average execution time
-    double stddev_ms;        // Standard deviation
-    double min_time_ms;      // Minimum time
-    double max_time_ms;      // Maximum time
     
-    // Derived metrics
-    double speedup;          // vs CPU baseline
-    double throughput_mpps;  // Megapixels per second
+    double time_ms;          
+    double stddev_ms;        
+    double min_time_ms;      
+    double max_time_ms;      
+    
+    
+    double speedup;          
+    double throughput_mpps;  
     
     BenchmarkResult() : image_width(0), image_height(0), kernel_size(0),
                         block_size(16), time_ms(0), stddev_ms(0),
@@ -36,52 +36,52 @@ struct BenchmarkResult {
                         throughput_mpps(0) {}
 };
 
-// ============================================================================
-// Benchmark Configuration
-// ============================================================================
+
+
+
 
 struct BenchmarkConfig {
-    // Image sizes to test
+    
     std::vector<int> image_sizes = {256, 512, 1024, 2048, 4096};
     
-    // Kernel sizes to test
+    
     std::vector<int> kernel_sizes = {3, 5, 7};
     
-    // Kernel types to test
+    
     std::vector<std::string> kernel_types = {"gaussian", "box", "sharpen", "sobel_x"};
     
-    // CUDA block sizes to test
+    
     std::vector<int> block_sizes = {8, 16, 32};
     
-    // Number of iterations for averaging
+    
     int iterations = 10;
     
-    // Number of warm-up runs
+    
     int warmup_runs = 2;
     
-    // Output directory
+    
     std::string output_dir = "results/benchmarks/";
     
-    // Test specific implementations
+    
     bool test_cpu = true;
     bool test_cuda_global = true;
     bool test_cuda_constant = true;
     bool test_cuda_shared = true;
     
-    // Generate synthetic images if needed
+    
     bool use_synthetic_images = true;
     
-    // Save example output images
+    
     bool save_examples = false;
     std::string examples_dir = "images/output/";
 
-    // Verbose output
+    
     bool verbose = true;
 };
 
-// ============================================================================
-// Benchmark Functions
-// ============================================================================
+
+
+
 
 /**
  * Run comprehensive benchmarks with all configurations
@@ -124,9 +124,9 @@ BenchmarkResult benchmark_single(const Image& image, const ConvKernel& kernel,
 std::map<std::string, double> compare_implementations(
     const Image& image, const ConvKernel& kernel, int iterations = 10);
 
-// ============================================================================
-// Result Export Functions
-// ============================================================================
+
+
+
 
 /**
  * Export results to CSV file
@@ -151,9 +151,9 @@ void print_results_summary(const std::vector<BenchmarkResult>& results);
  */
 void print_result(const BenchmarkResult& result);
 
-// ============================================================================
-// Validation Functions
-// ============================================================================
+
+
+
 
 /**
  * Validate CUDA implementation against CPU (correctness check)
@@ -176,4 +176,4 @@ bool validate_cuda_correctness(const Image& image, const ConvKernel& kernel,
 std::map<std::string, bool> validate_all_implementations(
     const Image& image, const ConvKernel& kernel);
 
-#endif // BENCHMARK_H
+#endif 
