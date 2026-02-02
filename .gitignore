@@ -1,6 +1,7 @@
 # Build folders
 bin/
 build/
+obj/
 
 # IDE configurations
 .vscode/
