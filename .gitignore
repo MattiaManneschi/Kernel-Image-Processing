@@ -24,21 +24,6 @@ obj/
 .cproject
 .settings/
 
-# Results (keep structure, ignore large generated files)
-results/benchmarks/*.csv
-results/plots/*.png
-!results/benchmarks/.gitkeep
-!results/plots/.gitkeep
-
-# Images (keep structure, ignore actual images - too large)
-images/input/*.png
-images/input/*.jpg
-images/input/*.jpeg
-images/input/*.bmp
-images/output/*
-!images/input/.gitkeep
-!images/output/.gitkeep
-
 # OS generated
 .DS_Store
 .DS_Store?
