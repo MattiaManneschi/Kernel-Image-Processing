@@ -1,0 +1,551 @@
+\documentclass[10pt,twocolumn,letterpaper]{article}
+
+\usepackage{cvpr}
+\usepackage{times}
+\usepackage{epsfig}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{url}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{float}
+\usepackage{booktabs}
+
+% Code listing style for CUDA/C++
+\lstset{
+  basicstyle=\ttfamily\scriptsize,
+  breaklines=true,
+  frame=single,
+  language=C++,
+  keywordstyle=\color{blue},
+  commentstyle=\color{green!60!black},
+  stringstyle=\color{red},
+  numbers=none,
+  showstringspaces=false,
+  tabsize=2,
+  breakatwhitespace=true,
+  postbreak=\mbox{\textcolor{gray}{$\hookrightarrow$}\space},
+  morekeywords={__global__, __device__, __shared__, __constant__, __restrict__, uint8_t, blockIdx, blockDim, threadIdx, __syncthreads}
+}
+
+\cvprfinalcopy
+
+\def\cvprPaperID{****}
+\def\httilde{\mbox{\tt\raisebox{-.5ex}{\symbol{126}}}}
+
+\ifcvprfinal\pagestyle{empty}\fi
+\begin{document}
+
+%%%%%%%%% TITLE
+\title{Kernel Image Processing\\Parallel Computing 2025-2026 --- Final Assignment}
+
+\author{Mattia Manneschi\\
+{\tt\small mattia.manneschi@edu.unifi.it}
+}
+
+\maketitle
+\thispagestyle{empty}
+
+%%%%%%%%% ABSTRACT
+\begin{abstract}
+This assignment demonstrates how to implement kernel-based image processing using GPU parallelization with CUDA. The project implements various convolution filters (Gaussian blur, sharpen, edge detection, emboss) and compares the performance of sequential CPU execution against three CUDA implementations with different memory optimization strategies.
+\end{abstract}
+
+%%%%%%%%% BODY TEXT
+\noindent\large\textbf{Future Distribution Permission}\\
+\indent The author(s) of this report give permission for this document to be distributed to Unifi-affiliated students taking future courses.
+
+\section{Introduction}
+
+This project implements an image processing system based on convolution operations, leveraging the parallel computing power offered by NVIDIA GPUs through the CUDA platform. The main objective is to demonstrate the benefits of GPU parallelization compared to sequential CPU processing for computationally intensive operations such as image filtering.
+
+Convolution is a fundamental operation in digital image processing, used to apply filters such as blur, sharpen, edge detection, and emboss effects. Each pixel in the output image is calculated as a weighted linear combination of neighboring pixels in the input image, where the weights are defined by a matrix called kernel. The dataset used during the experiments is the Kodak dataset~\cite{kodak}.
+
+\subsection{Project Objectives}
+
+\begin{itemize}
+\item Implement a sequential CPU version as baseline for performance comparison.
+\item Develop three CUDA implementations with different levels of memory optimization.
+\item Conduct a complete performance analysis with various image and kernel sizes.
+\item Achieve significant speedups compared to the sequential CPU implementation.
+\item Provide visual examples of filters applied to real images.
+\end{itemize}
+
+\subsection{Hardware Used}
+
+Tests were executed on an NVIDIA GeForce GTX 1080 GPU with Pascal architecture (SM 6.1), 2560 CUDA cores, 8 GB GDDR5X memory, 320 GB/s bandwidth, 1607 MHz base clock, and Compute Capability 6.1.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{ll}
+\toprule
+\textbf{Specification} & \textbf{Value} \\
+\midrule
+Architecture & Pascal (SM 6.1) \\
+CUDA Cores & 2560 \\
+Memory & 8 GB GDDR5X \\
+Bandwidth & 320 GB/s \\
+Base Clock & 1607 MHz \\
+Compute Capability & 6.1 \\
+\bottomrule
+\end{tabular}
+\caption{GPU hardware specifications}
+\label{tab:hardware}
+\end{table}
+
+\section{Theoretical Background}
+
+\subsection{Convolution Operation}
+
+2D convolution is mathematically defined as:
+\begin{equation}
+g(x,y) = \sum_{i} \sum_{j} f(x+i, y+j) \cdot \omega(i,j)
+\end{equation}
+where $g$ is the filtered image, $f$ is the original image, and $\omega$ is the convolution kernel. For each pixel, the operation requires $K \times K$ multiplications and sums, where $K$ is the kernel dimension.
+
+\subsection{Implemented Convolution Kernels}
+
+The project implements multiple kernels based on Wikipedia's Kernel Image Processing documentation~\cite{wikipedia_kernel}: Gaussian Blur (3$\times$3, 5$\times$5, 7$\times$7), Box Blur (3$\times$3, 5$\times$5, 7$\times$7), Sharpen (3$\times$3), Sobel X/Y (3$\times$3), Prewitt X/Y (3$\times$3), Laplacian (3$\times$3), and Emboss (3$\times$3).
+
+\begin{table}[H]
+\centering
+\begin{tabular}{ll}
+\toprule
+\textbf{Kernel} & \textbf{Size} \\
+\midrule
+Gaussian Blur & 3$\times$3, 5$\times$5, 7$\times$7 \\
+Box Blur & 3$\times$3, 5$\times$5, 7$\times$7 \\
+Sharpen & 3$\times$3 \\
+Sobel X/Y & 3$\times$3 \\
+Prewitt X/Y & 3$\times$3 \\
+Laplacian & 3$\times$3 \\
+Emboss & 3$\times$3 \\
+\bottomrule
+\end{tabular}
+\caption{Implemented convolution kernels}
+\label{tab:kernels}
+\end{table}
+
+\subsection{CUDA Architecture}
+
+CUDA (Compute Unified Device Architecture) is a parallel computing platform developed by NVIDIA. The CUDA architecture organizes threads in a three-level hierarchy: Grid (set of all blocks executing a kernel), Block (group of threads that can cooperate via shared memory), and Thread (minimum execution unit, each thread processes one or more pixels). The GTX 1080 can handle up to 1024 threads per block and up to 2048 active threads per Streaming Multiprocessor.
+
+\section{Implementation}
+
+\subsection{Project Structure}
+
+The project is organized in modules: \texttt{main.cpp} (entry point and CLI parsing), \texttt{cpu\_convolution.cpp} (sequential CPU implementation), \texttt{gpu\_convolution.cu} (3 CUDA versions), \texttt{kernels.cpp} (convolution kernel definitions), \texttt{image\_io.cpp} (image I/O using stb library), \texttt{benchmark.cpp} (automated benchmarking system), and \texttt{advanced\_tests.cpp} (advanced performance tests).
+
+\subsection{CPU Implementation (Baseline)}
+
+The sequential implementation was developed to run entirely on the CPU and serves as the primary performance baseline for the project. The convolution process is managed through four nested iterative loops that scan the spatial coordinates of the image and, for each pixel, the entire kernel window. From an architectural standpoint, this version is heavily penalized by the access latency of the system RAM, as every single pixel requires multiple redundant reads to fetch the neighbor values necessary for the calculation. The lack of parallelism makes this solution highly inefficient as the image resolution or the filter size increases, yet it establishes the necessary reference point to quantify the speedup achieved by the subsequent accelerated versions.
+
+\begin{lstlisting}
+for (int y = 0; y < height; y++) {
+  for (int x = 0; x < width; x++) {
+    for (int c = 0; c < channels; c++) {
+      float sum = 0.0f;
+      for (int ky = -half; ky <= half; ky++) {
+        for (int kx = -half; kx <= half; kx++) {
+          int px = clamp_coord(x + kx, 0, 
+              width - 1);
+          int py = clamp_coord(y + ky, 0, 
+              height - 1);
+          int img_idx = (py * width + px) 
+              * channels + c;
+          int k_idx = (ky + half) * kernel_size 
+              + (kx + half);
+          sum += static_cast<float>(
+              input[img_idx]) * kernel[k_idx];
+        }
+      }
+      int out_idx = (y * width + x) 
+          * channels + c;
+      output[out_idx] = static_cast<uint8_t>(
+          std::max(0.0f, 
+            std::min(255.0f, sum)));
+    }
+  }
+}
+\end{lstlisting}
+
+\subsection{CUDA Implementations}
+
+Three CUDA versions with increasing optimization levels were developed.
+
+\subsubsection{Global Memory}
+
+The first parallel version leverages the CUDA architecture to distribute the workload across thousands of threads, mapping each individual pixel of the image to a specific thread within a two-dimensional grid. In this configuration, both the image data and the filter coefficients reside in the GPU's global memory. Although a drastic reduction in computation time is achieved compared to the CPU, the system remains heavily memory-bound. Since adjacent threads require the same pixels to complete the convolution, the global memory is stressed by redundant reads, highlighting the need for a more sophisticated management of the memory hierarchy to eliminate data transfer bottlenecks.
+
+\begin{lstlisting}
+__global__ void convolve_kernel_global(
+    const uint8_t* __restrict__ input,
+    uint8_t* __restrict__ output,
+    int width, int height, int channels,
+    const float* __restrict__ kernel,
+    int kernel_size)
+{
+  int x = blockIdx.x * blockDim.x + threadIdx.x;
+  int y = blockIdx.y * blockDim.y + threadIdx.y;
+  if (x >= width || y >= height) return;
+  int half = kernel_size / 2;
+  for (int c = 0; c < channels; c++) {
+    float sum = 0.0f;
+    for (int ky = -half; ky <= half; ky++) {
+      for (int kx = -half; kx <= half; kx++) {
+        int px = min(max(x + kx, 0), width - 1);
+        int py = min(max(y + ky, 0), height - 1);
+        int img_idx = (py * width + px) 
+            * channels + c;
+        int k_idx = (ky + half) * kernel_size 
+            + (kx + half);
+        sum += static_cast<float>(input[img_idx])
+            * kernel[k_idx];
+      }
+    }
+    int out_idx = (y * width + x) * channels + c;
+    output[out_idx] = static_cast<uint8_t>(
+        fminf(fmaxf(sum, 0.0f), 255.0f));
+  }
+}
+\end{lstlisting}
+
+\subsubsection{Constant Memory}
+
+To improve the efficiency of fetching filter coefficients, a version was implemented that allocates the convolution kernel in the GPU's constant memory. This specialized memory is equipped with a dedicated cache on each Streaming Multiprocessor (SM) and is optimized for read-only operations common to all threads within a warp. Since every thread reads the same coefficient simultaneously during the convolution phase, the GPU can perform a broadcast of the data, serving all threads in a single clock cycle with near-zero latency. This optimization significantly reduces traffic on the global memory, allowing the memory controller to dedicate more bandwidth to loading the image pixels.
+
+\begin{lstlisting}
+#define MAX_KERNEL_SIZE 7
+#define MAX_KERNEL_ELEMENTS \
+    (MAX_KERNEL_SIZE * MAX_KERNEL_SIZE)
+
+__constant__ float d_kernel[MAX_KERNEL_ELEMENTS];
+
+__global__ void convolve_kernel_constant(
+    const uint8_t* __restrict__ input,
+    uint8_t* __restrict__ output,
+    int width, int height, int channels,
+    int kernel_size)
+{
+  int x = blockIdx.x * blockDim.x + threadIdx.x;
+  int y = blockIdx.y * blockDim.y + threadIdx.y;
+  if (x >= width || y >= height) return;
+  int half = kernel_size / 2;
+  for (int c = 0; c < channels; c++) {
+    float sum = 0.0f;
+    for (int ky = -half; ky <= half; ky++) {
+      for (int kx = -half; kx <= half; kx++) {
+        int px = min(max(x + kx, 0), width - 1);
+        int py = min(max(y + ky, 0), height - 1);
+        int img_idx = (py * width + px) 
+            * channels + c;
+        int k_idx = (ky + half) * kernel_size 
+            + (kx + half);
+        sum += static_cast<float>(input[img_idx])
+            * d_kernel[k_idx];
+      }
+    }
+    int out_idx = (y * width + x) * channels + c;
+    output[out_idx] = static_cast<uint8_t>(
+        fminf(fmaxf(sum, 0.0f), 255.0f));
+  }
+}
+\end{lstlisting}
+
+\subsubsection{Shared Memory}
+
+The most advanced implementation is based on the use of Shared Memory to minimize global memory accesses. The image is divided into blocks or ``tiles,'' which are cooperatively loaded by the threads of a block into the on-chip SRAM, which offers speeds comparable to those of registers. To correctly handle the boundaries of each tile, a ``Halo loading'' strategy was implemented, where boundary threads load an extra rim of pixels equal to the kernel radius. Through the use of the \texttt{\_\_syncthreads()} synchronization barrier, the system ensures that all data is available before the computation begins. Once the shared memory is populated, each pixel is read from global memory only once (or nearly so), bringing the kernel's efficiency close to the theoretical limits of the hardware.
+
+\begin{lstlisting}
+template<int BLOCK_SIZE, int KERNEL_RADIUS>
+__global__ void convolve_kernel_shared(
+    const uint8_t* __restrict__ input,
+    uint8_t* __restrict__ output,
+    int width, int height, int channels,
+    int kernel_size)
+{
+  const int TILE_SIZE = BLOCK_SIZE 
+      + 2 * KERNEL_RADIUS;
+  __shared__ float tile[TILE_SIZE][TILE_SIZE];
+  int tx = threadIdx.x;
+  int ty = threadIdx.y;
+  int x = blockIdx.x * BLOCK_SIZE + tx;
+  int y = blockIdx.y * BLOCK_SIZE + ty;
+  int half = kernel_size / 2;
+  
+  for (int c = 0; c < channels; c++) {
+    int shared_x = tx + KERNEL_RADIUS;
+    int shared_y = ty + KERNEL_RADIUS;
+    
+    // Load central tile
+    if (x < width && y < height) {
+      tile[shared_y][shared_x] = 
+          static_cast<float>(
+            input[(y * width + x) * channels + c]);
+    } else {
+      tile[shared_y][shared_x] = 0.0f;
+    }
+    
+    // Load left halo
+    if (tx < KERNEL_RADIUS) {
+      int load_x = max(0, 
+          (int)(blockIdx.x * BLOCK_SIZE) 
+          - KERNEL_RADIUS + tx);
+      int load_y = min(max(y, 0), height - 1);
+      tile[shared_y][tx] = static_cast<float>(
+          input[(load_y * width + load_x) 
+            * channels + c]);
+    }
+    
+    // Load right halo
+    if (tx >= BLOCK_SIZE - KERNEL_RADIUS) {
+      int load_x = min(
+          (int)(blockIdx.x * BLOCK_SIZE 
+            + BLOCK_SIZE + tx 
+            - (BLOCK_SIZE - KERNEL_RADIUS)), 
+          width - 1);
+      int load_y = min(max(y, 0), height - 1);
+      tile[shared_y][BLOCK_SIZE + KERNEL_RADIUS 
+          + tx - (BLOCK_SIZE - KERNEL_RADIUS)] =
+          static_cast<float>(
+            input[(load_y * width + load_x) 
+              * channels + c]);
+    }
+    
+    // Load top halo
+    if (ty < KERNEL_RADIUS) {
+      int load_x = min(max(x, 0), width - 1);
+      int load_y = max(0, 
+          (int)(blockIdx.y * BLOCK_SIZE) 
+          - KERNEL_RADIUS + ty);
+      tile[ty][shared_x] = static_cast<float>(
+          input[(load_y * width + load_x) 
+            * channels + c]);
+    }
+    
+    // Load bottom halo
+    if (ty >= BLOCK_SIZE - KERNEL_RADIUS) {
+      int load_x = min(max(x, 0), width - 1);
+      int load_y = min(
+          (int)(blockIdx.y * BLOCK_SIZE 
+            + BLOCK_SIZE + ty 
+            - (BLOCK_SIZE - KERNEL_RADIUS)), 
+          height - 1);
+      tile[BLOCK_SIZE + KERNEL_RADIUS + ty 
+          - (BLOCK_SIZE - KERNEL_RADIUS)][shared_x]=
+          static_cast<float>(
+            input[(load_y * width + load_x) 
+              * channels + c]);
+    }
+    
+    __syncthreads();
+    
+    // Compute convolution
+    if (x < width && y < height) {
+      float sum = 0.0f;
+      #pragma unroll
+      for (int ky = -half; ky <= half; ky++) {
+        #pragma unroll
+        for (int kx = -half; kx <= half; kx++) {
+          int k_idx = (ky + half) * kernel_size 
+              + (kx + half);
+          sum += tile[ty + KERNEL_RADIUS + ky]
+                     [tx + KERNEL_RADIUS + kx] 
+              * d_kernel[k_idx];
+        }
+      }
+      output[(y * width + x) * channels + c] =
+          static_cast<uint8_t>(
+            fminf(fmaxf(sum, 0.0f), 255.0f));
+    }
+    __syncthreads();
+  }
+}
+\end{lstlisting}
+
+\subsection{Border Handling}
+
+For pixels at image borders, where the kernel extends beyond boundaries, the clamping strategy is used: pixels outside the image assume the value of the nearest border pixel. This choice avoids visual artifacts and preserves the original image dimensions.
+
+\section{Experimental Results}
+
+\subsection{Test Methodology}
+
+Benchmarks were executed using the Kodak dataset, a standard set of 24 high-quality photographic images. For each configuration, 10 iterations were performed, excluding the first (warm-up) and calculating mean and standard deviation of the remaining ones.
+
+Tested configurations include: image sizes 256$\times$256, 512$\times$512, 1024$\times$1024, 2048$\times$2048, 4096$\times$4096; kernel sizes 3$\times$3, 5$\times$5, 7$\times$7; CUDA block sizes 8$\times$8, 16$\times$16, 32$\times$32; kernel types Gaussian, Box, Sobel, Laplacian, Sharpen, Emboss.
+
+\subsection{Implementation Comparison}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{figures/image4.png}
+\caption{CPU vs CUDA execution time comparison (4096$\times$4096)}
+\label{fig:comparison}
+\end{figure}
+
+The CPU implementation requires about 1793 ms, while all CUDA versions complete the operation in less than 5 ms, achieving an improvement of over 350 times.
+
+\subsection{Speedup vs Image Size}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{figures/image9.png}
+\caption{Speedup as a function of image size}
+\label{fig:speedup_image}
+\end{figure}
+
+Speedup increases with image size, stabilizing around 350-370x for large images. This behavior is expected: larger images allow better exploitation of the GPU's massive parallelism, amortizing data transfer overhead.
+
+\subsection{Speedup vs Kernel Size}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{figures/image10.png}
+\caption{Speedup as a function of kernel size}
+\label{fig:speedup_kernel}
+\end{figure}
+
+Speedup increases significantly with larger kernels (up to 410x for 7$\times$7 kernels). This is because larger kernels increase computational work per pixel ($O(K^2)$), favoring the parallel approach over the sequential one.
+
+\subsection{Speedup Heatmap}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{figures/image8.png}
+\caption{Speedup heatmap (CUDA Shared Memory)}
+\label{fig:heatmap}
+\end{figure}
+
+The heatmap shows how speedup varies as a function of both image and kernel size. The highest values (over 400x) are obtained with large images and 7$\times$7 kernels.
+
+\subsection{Throughput}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{figures/image2.png}
+\caption{Throughput in Megapixel/second}
+\label{fig:throughput}
+\end{figure}
+
+CUDA throughput reaches approximately 8000 Megapixel/second for 3$\times$3 kernels, enabling real-time 4K image processing (about 3 ms per frame). With larger kernels, throughput decreases but remains in the order of gigapixels per second.
+
+\subsection{Block Size Analysis}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{figures/image6.png}
+\caption{Execution time comparison by block size}
+\label{fig:blocksize}
+\end{figure}
+
+Block size analysis shows that 16$\times$16 configurations offer the best performance on the GTX 1080. Blocks too small (8$\times$8) don't fully exploit occupancy, while blocks too large (32$\times$32) can limit the number of active blocks per SM.
+
+\subsection{Performance Summary}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{ll}
+\toprule
+\textbf{Metric} & \textbf{Value} \\
+\midrule
+Maximum Speedup & 447x (Sobel 3$\times$3, 4096$\times$4096) \\
+Average Speedup & 345x \\
+Maximum Throughput & 8000 MP/s \\
+4K Processing Time (Gaussian 5$\times$5) & 3.11 ms \\
+Optimal Block Size & 16$\times$16 \\
+\bottomrule
+\end{tabular}
+\caption{Performance summary}
+\label{tab:summary}
+\end{table}
+
+\section{Visual Filter Examples}
+
+The following images show the effects of various filters applied to a Kodak dataset image. All filters were processed with the CUDA Shared Memory implementation.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{figures/image1.jpg}
+\caption{Original image}
+\label{fig:original}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{figures/image7.jpg}
+\caption{Gaussian Blur 5$\times$5}
+\label{fig:blur}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{figures/image11.jpg}
+\caption{Sharpen filter}
+\label{fig:sharpen}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{figures/image3.jpg}
+\caption{Sobel X (vertical edges)}
+\label{fig:sobel}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{figures/image5.jpg}
+\caption{Laplacian filter}
+\label{fig:laplacian}
+\end{figure}
+
+\section{Conclusions}
+
+The project demonstrated the effectiveness of GPU parallelization for image convolution operations. The main results can be summarized as follows.
+
+\subsection{Results Analysis}
+
+The three CUDA implementations show very similar performance, with differences below 1\%. This suggests that for this type of workload, memory bandwidth is not the main bottleneck, and shared/constant memory optimizations have limited impact. However, the speedup compared to CPU is dramatic ($>$300x), confirming GPU suitability for this type of processing.
+
+Speedup increases with image and kernel size, reaching optimal values for images $\geq$1024$\times$1024 and kernels $\geq$5$\times$5. For small images (256$\times$256), kernel launch overhead and data transfer reduce parallelization benefits.
+
+\subsection{Future Developments}
+
+\begin{itemize}
+\item Implementation of separable convolution for Gaussian kernels (reduction from $O(K^2)$ to $O(2K)$)
+\item Use of CUDA Streams for computation and data transfer overlap
+\item Support for batch processing of multiple images
+\item Implementation of more complex kernels (bilateral filter, non-local means)
+\item Porting to other platforms (OpenCL, Metal, Vulkan Compute)
+\end{itemize}
+
+\subsection{Final Considerations}
+
+The project confirms that the GPU is the ideal tool for parallel image processing. With a speedup of over 300 times, operations that would require seconds on CPU can be completed in milliseconds, paving the way for real-time applications such as video processing, computer vision, and machine learning.
+
+\begin{thebibliography}{9}
+
+\bibitem{wikipedia_kernel}
+Wikipedia - Kernel (image processing).
+\url{https://en.wikipedia.org/wiki/Kernel_(image_processing)}
+
+\bibitem{cuda_guide}
+NVIDIA CUDA C++ Programming Guide.
+\url{https://docs.nvidia.com/cuda/cuda-c-programming-guide/}
+
+\bibitem{kodak}
+Kodak Lossless True Color Image Suite.
+\url{http://r0k.us/graphics/kodak/}
+
+\bibitem{stb}
+stb\_image library.
+\url{https://github.com/nothings/stb}
+
+\bibitem{repo}
+Project Repository.
+\url{https://github.com/MattiaManneschi/Kernel-Image-Processing}
+
+\end{thebibliography}
+
+\end{document}
